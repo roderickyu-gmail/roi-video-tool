@@ -1,12 +1,16 @@
 {
-  "name": "my-v0-project",
+  "name": "roi-video-tool",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "build": "next build",
     "dev": "next dev",
     "lint": "next lint",
-    "start": "next start"
+    "start": "next start",
+    "db:migrate": "supabase db push",
+    "db:reset": "supabase db reset",
+    "db:types": "supabase gen types typescript --local > types/database.ts",
+    "db:setup": "./supabase/setup.sh"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -37,6 +41,8 @@
     "@radix-ui/react-toggle": "1.1.1",
     "@radix-ui/react-toggle-group": "1.1.1",
     "@radix-ui/react-tooltip": "1.1.6",
+    "@supabase/supabase-js": "^2.39.3",
+    "@supabase/ssr": "^0.0.10",
     "autoprefixer": "^10.4.20",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

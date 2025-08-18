@@ -1,0 +1,130 @@
+# Supabase Configuration for ROI Video Tool
+
+[project]
+id = "your-project-id"
+name = "roi-video-tool"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "storage", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 15
+
+[db.pooler]
+enabled = false
+port = 54329
+pool_mode = "transaction"
+default_pool_size = 20
+max_client_conn = 100
+
+[studio]
+enabled = true
+port = 54323
+api_url = "http://localhost:54321"
+
+[inbucket]
+enabled = true
+port = 54324
+smtp_port = 54325
+pop3_port = 54326
+
+[storage]
+enabled = true
+port = 54325
+file_size_limit = "52428800"
+
+[storage.buckets]
+# Public bucket for assets accessible via URL
+[storage.buckets.public-assets]
+public = true
+file_size_limit = "52428800"
+allowed_mime_types = ["image/*", "video/*", "audio/*"]
+
+# Private bucket for raw video uploads
+[storage.buckets.video-uploads]
+public = false
+file_size_limit = "5368709120" # 5GB
+allowed_mime_types = ["video/*"]
+
+# Private bucket for processed videos
+[storage.buckets.video-variants]
+public = false
+file_size_limit = "1073741824" # 1GB
+allowed_mime_types = ["video/mp4", "video/quicktime"]
+
+# Public bucket for thumbnails
+[storage.buckets.thumbnails]
+public = true
+file_size_limit = "5242880" # 5MB
+allowed_mime_types = ["image/jpeg", "image/png", "image/webp"]
+
+# Private bucket for brand assets
+[storage.buckets.brand-assets]
+public = false
+file_size_limit = "52428800" # 50MB
+allowed_mime_types = ["image/*", "application/pdf", "font/*"]
+
+# Private bucket for templates
+[storage.buckets.templates]
+public = false
+file_size_limit = "10485760" # 10MB
+allowed_mime_types = ["application/json"]
+
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["http://localhost:3000/auth/callback"]
+jwt_expiry = 3600
+enable_signup = true
+enable_anonymous_sign_ins = false
+
+[auth.email]
+enable_signup = true
+enable_confirmations = true
+secure_password_change = true
+template.confirmation = """
+<h2>Confirm your email</h2>
+<p>Welcome to ROI Video Tool!</p>
+<p>Follow this link to confirm your email address:</p>
+<p><a href="{{ .ConfirmationURL }}">Confirm your email</a></p>
+"""
+template.recovery = """
+<h2>Reset your password</h2>
+<p>Follow this link to reset your password:</p>
+<p><a href="{{ .RecoveryURL }}">Reset password</a></p>
+"""
+template.email_change = """
+<h2>Confirm email change</h2>
+<p>Follow this link to confirm your new email address:</p>
+<p><a href="{{ .EmailChangeURL }}">Confirm email change</a></p>
+"""
+
+[auth.sms]
+enable_signup = false
+enable_confirmations = false
+
+[auth.external.google]
+enabled = false
+client_id = ""
+secret = ""
+redirect_uri = ""
+
+[auth.external.github]
+enabled = false
+client_id = ""
+secret = ""
+redirect_uri = ""
+
+[[analytics]]
+enabled = false
+port = 54327
+vector_port = 54328
+gcp_project_id = ""
+gcp_project_number = ""
+gcp_jwt_path = "supabase/gcloud.json"
