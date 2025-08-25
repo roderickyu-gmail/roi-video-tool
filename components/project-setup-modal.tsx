@@ -11,8 +11,10 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Plus, X, Target, Globe, MessageSquare, Shield, ChevronLeft, ChevronRight } from "lucide-react"
+import { Plus, X, Target, Globe, MessageSquare, Shield, ChevronLeft, ChevronRight, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useCreateProject } from "@/hooks/use-create-project"
+import { toast } from "sonner"
 
 interface ProjectSetupModalProps {
   open: boolean
@@ -22,6 +24,7 @@ interface ProjectSetupModalProps {
 export function ProjectSetupModal({ open, onOpenChange }: ProjectSetupModalProps) {
   const [currentTab, setCurrentTab] = useState("basic")
   const [isMobile, setIsMobile] = useState(false)
+  const { createProject, isCreating } = useCreateProject()
   const firstInputRef = useRef<HTMLInputElement>(null)
   
   // Check if mobile device
@@ -107,10 +110,93 @@ export function ProjectSetupModal({ open, onOpenChange }: ProjectSetupModalProps
     setter(array.filter((_, i) => i !== index))
   }
 
-  const handleSubmit = () => {
-    // Here you would typically save the project data
-    console.log("Project data:", formData)
-    onOpenChange(false)
+  const handleSubmit = async () => {
+    try {
+      // Validate required fields
+      if (!formData.name) {
+        toast.error("Please enter a project name")
+        setCurrentTab("basic")
+        return
+      }
+      
+      if (!formData.legalAuthorization) {
+        toast.error("Please confirm content usage authorization")
+        setCurrentTab("legal")
+        return
+      }
+      
+      // Get the first selected platform (single selection for now)
+      const platform = formData.platforms[0] as 'tiktok' | 'reels' | 'shorts' || 'tiktok'
+      
+      // Prepare project data
+      const projectData = {
+        // Basic Info
+        name: formData.name,
+        description: formData.description,
+        platform: platform,
+        
+        // Targeting
+        testGoal: formData.goal,
+        targetAudience: formData.audience,
+        campaignObjective: formData.objective,
+        
+        // UTM Setup
+        utmSource: formData.utmTemplate.source || platform,
+        utmMedium: formData.utmTemplate.medium || 'video',
+        utmCampaign: formData.utmTemplate.campaign,
+        utmContent: formData.utmTemplate.content,
+        landingPageUrl: formData.landingPage,
+        trackingPixelId: formData.trackingPixel,
+        
+        // Content Pool
+        hooks: formData.hooks,
+        benefits: formData.benefits || [],
+        ctas: formData.ctas,
+        musicTracks: [],
+        
+        // Legal & Auth
+        contentUsageAuthorization: formData.legalAuthorization,
+        modelReleases: formData.modelReleases,
+        musicLicensing: formData.musicLicensing,
+        brandAssetRights: formData.brandAssets,
+      }
+      
+      // Create the project
+      await createProject(projectData)
+      
+      // Close modal on success (redirect happens in the hook)
+      onOpenChange(false)
+      
+      // Reset form for next use
+      setFormData({
+        name: "",
+        description: "",
+        platforms: [],
+        goal: "",
+        audience: "",
+        objective: "",
+        landingPage: "",
+        trackingPixel: "",
+        utmTemplate: {
+          source: "",
+          medium: "video",
+          campaign: "",
+          content: "",
+        },
+        hooks: [],
+        benefits: [],
+        ctas: [],
+        legalAuthorization: false,
+        modelReleases: false,
+        musicLicensing: false,
+        brandAssets: false,
+      })
+      setCurrentTab("basic")
+      
+    } catch (error) {
+      console.error("Failed to create project:", error)
+      // Error toast is handled in the hook
+    }
   }
 
   // Tab navigation helpers
@@ -612,10 +698,17 @@ export function ProjectSetupModal({ open, onOpenChange }: ProjectSetupModalProps
                 ) : (
                   <Button 
                     onClick={handleSubmit} 
-                    disabled={!formData.name || !formData.legalAuthorization}
+                    disabled={!formData.name || !formData.legalAuthorization || isCreating}
                     className="min-w-[120px]"
                   >
-                    Create Project
+                    {isCreating ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Creating...
+                      </>
+                    ) : (
+                      'Create Project'
+                    )}
                   </Button>
                 )}
               </div>
